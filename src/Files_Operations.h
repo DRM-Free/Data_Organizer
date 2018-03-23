@@ -17,5 +17,3 @@ void genSetFolders(std::pair<char*,char*> parsed_params);
 
 
 #endif
-
-
