@@ -22,7 +22,6 @@ std::string user_choice;
 std::getline(std::cin,user_choice);
 if(user_choice==(std::string)"\0" or user_choice==(std::string)"y"){ //User acceptance
 	std::cout << "Proceeding to file operations" << std::endl;
-	//Insert relevant code here
 	genSetFolders(parsed_params);
 }
 

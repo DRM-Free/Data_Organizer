@@ -12,6 +12,7 @@
 #include <stdlib.h>     /* exit, EXIT_FAILURE */
 #include <utility>      // std::pair, std::make_pair
 #include <string>
+//TODO Add optionnal parameter -ref cp or -ref sl for choice between symbolic link and full copy
 /**
  * @return first char* is input path
  * @return first char* is output path
