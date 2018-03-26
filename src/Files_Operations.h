@@ -24,10 +24,10 @@ static std::vector<std::pair<fs::path, fs::path>> unprocessedFolders;
 std::vector<fs::path> findFolders(fs::path dataFolder);
 void genSetFolders(std::pair<char*,char*> parsed_params);
 void pairRelatedFolders(std::vector<fs::path> allDataPaths);
-void pairRelatedFiles(std::vector<fs::path> unprocessedFolders);
 fs::path findMask(fs::path parentFolder);
 fs::path findScans(fs::path parentFolder);
-void writeOrganizedData_symLink(fs::path targetPath, fs::path CTScans,
+void writeOrganizedData_symLink(fs::path writePath, fs::path CTScans,
 		fs::path PETScans, fs::path CTMask, fs::path PETMask);
+std::vector<std::pair<fs::path,fs::path>> pairRelatedFiles(fs::path CTPath, fs::path PETPath);
 
 #endif

@@ -101,25 +101,33 @@ void pairRelatedFolders(std::vector<fs::path> allDataPaths) {
  */
 void genSetFolders(std::pair<char*,char*> parsed_params){
 	fs::path pIn=parsed_params.first;
-	fs::path pOutIn=parsed_params.second;
+	fs::path pOut=parsed_params.second;
 	pairRelatedFolders(findFolders(pIn));
-	for (auto f = unprocessedFolders.begin(); f != unprocessedFolders.end();
-			++f) {
-		fs::path CTPath = f->first;
-		fs::path PETPath = f->second;
-		fs::path CTMask = findMask(CTPath);
-		fs::path PETMask = findMask(PETPath);
-		fs::path CTScans = findScans(CTPath);
-		fs::path PETScans = findScans(PETPath);
-		fs::path writePath(parsed_params.second);
+	int foldersToWrite=unprocessedFolders.size();
+	std::vector<std::string> foldersNames=generateNames(foldersToWrite,std::string("_Set")); //Generate names for _Set folders too !
+		fs::path CTPath;
+		fs::path PETPath;
+		fs::path CTMask;
+		fs::path PETMask;
+		fs::path CTScans;
+		fs::path PETScans;
+		fs::path writePath;
+		std::string curName;
+	for (auto f = unprocessedFolders.begin(); f != unprocessedFolders.end();++f) {
+		CTPath = f->first;
+		PETPath = f->second;
+		CTMask = findMask(CTPath);
+		PETMask = findMask(PETPath);
+		CTScans = findScans(CTPath);
+		PETScans = findScans(PETPath);
+		writePath=fs::path(parsed_params.second);
 		//Time to write all those files somewhere !
+		writePath/=foldersNames[f-unprocessedFolders.begin()]; //Choose the proper name number
 		writeOrganizedData_symLink(writePath, CTScans, PETScans, CTMask,
 				PETMask);
 }
 }
 
-void pairRelatedFiles(std::vector<fs::path> unprocessedFolders) {
-}
 
 fs::path findMask(fs::path parentFolder) {
 	for (auto& p : fs::recursive_directory_iterator(parentFolder)) {
@@ -131,7 +139,7 @@ fs::path findMask(fs::path parentFolder) {
 			}
 		}
 	}
-	std::cerr << "Mask Was not found" << std::endl;
+	std::cerr << "A mask Was not found" << std::endl;
 	return "";
 }
 
@@ -141,12 +149,12 @@ fs::path findScans(fs::path parentFolder) {
 		fs::path curPath = fs::path(p);
 		if (curPath.extension() == ".dcm") { //We have found a dicom file. Is it a mask or a scan file ? Not known yet
 			//SEE Modify here if scans are not found properly
-			if (curPath.parent_path().stem() != "secondary") {
+			if (curPath.parent_path().stem() == "DICOM") {
 				return curPath;
 			}
 		}
 	}
-	std::cerr << "Scans were not found" << std::endl;
+	std::cerr << "Some scans were not found" << std::endl;
 	return "";
 }
 
@@ -158,9 +166,53 @@ fs::path findScans(fs::path parentFolder) {
  * @param CTMask Path to ctscan mask
  * @param PETMask Path to petscan dicom
  */
-void writeOrganizedData_symLink(fs::path targetPath, fs::path CTScans,
+void writeOrganizedData_symLink(const fs::path writePath, fs::path CTScans,
 		fs::path PETScans, fs::path CTMask, fs::path PETMask) {
-	std::cout << "Writing to folder " << targetPath << std::endl;
-//TODO complete file writing
+	std::cout << "Writing to folder " << writePath << std::endl;
+	fs::create_directory(writePath); //creates a directory with desired #number_Set name
+	int CTNumber=0;
+	int PETNumber=0;
+	for (auto& p : fs::directory_iterator(CTScans)) {
+CTNumber++;
+	}
+	for (auto& p : fs::directory_iterator(PETScans)) {
+PETNumber++;
+	}
+if(CTNumber!=PETNumber){ //SEE just a quick check that there is a proper number of files to pair, otherwise exits
+	std::cerr<<"For this set, number of Pet scans and CT scans found are different : "<< std::endl<<CTScans<<std::endl<<PETScans<<std::endl<<"Write process aborted"<<std::endl;
+    std::cin.get();
+            exit(0);
 }
+	std::vector<std::string> CTNames=generateNames(CTNumber,std::string("_CT")); //Generate CT names
+	std::vector<std::string> PETNames=generateNames(PETNumber,std::string("_Pet")); //Generate PET names
+	fs::path curPath;
+	std::vector<std::pair<fs::path,fs::path>> pairedFiles=pairRelatedFiles(CTScans,PETScans);
+for (auto p = pairedFiles.begin(); p != pairedFiles.end(); ++p) {
+		curPath=writePath;
+		curPath/=CTNames[p-pairedFiles.begin()]; //Choose the proper name number
+	    fs::create_symlink(p->first, curPath); //Creates symbolic link with target the path to CT image file
+		curPath=writePath;
+		curPath/=PETNames[p-pairedFiles.begin()]; //Choose the proper name number
+	    fs::create_symlink(p->second, curPath);  //Creates symbolic link with target the path to PET image file
+}}
 
+std::vector<std::pair<fs::path,fs::path>> pairRelatedFiles(fs::path CTPath, const fs::path PETPath){
+std::vector<std::pair<fs::path,fs::path>> pairedFiles; //First element of pair : CT image path. Second element : path to PET image file
+	fs::path curCTPath; //Path to CT image file to be added to pairedFiles
+	fs::path curPETPath; //Path to PET image file to be added to pairedFiles
+	std::pair<fs::path,fs::path> curPair; //Curent pair to be added (made from curCTPath and curPETPath
+for (auto ct : fs::directory_iterator(CTPath)) {
+	curPETPath=PETPath;
+	curCTPath=ct;
+	curPETPath=curCTPath.stem();
+	/**
+	 *
+	 *SEE Program takes for granted that files are paired properly (both CT and PET files exist with same name). If not the case, problems will occur
+	 *SEE A full research for paired files is considered too costly but can still be implemented here
+	*/
+	curPETPath/=curCTPath.filename(); //Appends proper file name to PETPath
+curPair=std::make_pair(curCTPath,curPETPath);
+pairedFiles.push_back(curPair);
+}
+return pairedFiles;
+}
