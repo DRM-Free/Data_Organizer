@@ -13,96 +13,50 @@
 #include <string>
 #include <iostream>
 
+
 /**
- * First processing step : finds all data folders
+ * First processing step : find and pair data folders with their relative of other imaging modality
  *
  */
-std::vector<fs::path> findFolders(fs::path dataFolder) {
-	std::vector<fs::path> allDataPaths;
+void pairRelatedFolders(fs::path dataFolder) {
+	int nbFolders=0;
 	for (auto& p : fs::directory_iterator(dataFolder)) {
-		allDataPaths.push_back(fs::path(p));
+		nbFolders++;
 	}
-	std::cout << allDataPaths.size() << " Data folders were found" << std::endl;
-	return allDataPaths;
-}
+	std::cout << nbFolders << " Data folders were found" << std::endl;
+	/**
+	 *
+	 *SEE Program takes for granted that data folders are paired properly (both _CT and _PET folders exist with same name). If not the case, problems will occur
+	 *SEE A full research for paired folders is considered too costly but can still be implemented here
+	*/
 
-
-/**
- * Second processing step : pair those folders with their relative of other imaging modality
- *
- */
-void pairRelatedFolders(std::vector<fs::path> allDataPaths) {
-	fs::path CTPath;
-	std::string CT = "";
-	fs::path PETPath;
-	std::string PET = "";
-
-	while (allDataPaths.begin() != allDataPaths.end()) {
-		for (auto path = allDataPaths.begin(); path != allDataPaths.end();
-				++path) {
-
-			if (path == allDataPaths.begin()) {
-
-				std::string firstPath = *path;
-				if (firstPath.find("_PET") != std::string::npos) {
-					PETPath = firstPath;
-					PET = PETPath;
-					int PETNameEnds = CT.find("_");
-					PET.erase(PET.begin() + PETNameEnds, PET.end()); //erases the _PET part from path name
-				}
-				if (firstPath.find("_CT") != std::string::npos) {
-					CTPath = firstPath;
-					CT = CTPath;
-					int CTNameEnds = CT.find("_");
-					CT.erase(CT.begin() + CTNameEnds, CT.end()); //erases the _CT part from path name
-				}
-
-			}
-
-			else if (CTPath == "") {
-				CTPath = *path;
-		CT = CTPath;
-		int CTNameEnds = CT.find("_");
-		CT.erase(CT.begin() + CTNameEnds, CT.end()); //erases the _CT part from path name
-				if (CT == PET) { //A match was found, let's put that in unprocessedFolders
-					unprocessedFolders.push_back(
-							std::make_pair(CTPath, PETPath));
-					//SEE do not forget to remove found elements from allDataPaths so it gets empty !
-					allDataPaths.erase(allDataPaths.begin());
-					allDataPaths.erase(path);
-				}
-				else { //There is no match, CTPath will be changed next iteration
-					CTPath = "";
-				}
-			}
-			else if (PETPath == "")
-			{
-				PETPath = *path;
-				PET = PETPath;
-				int PETNameEnds = CT.find("_");
-				PET.erase(PET.begin() + PETNameEnds, PET.end()); //erases the _PET part from path name
-				if (CT == PET) { //A match was found, let's put that in unprocessedFolders
-					unprocessedFolders.push_back(
-							std::make_pair(CTPath, PETPath));
-					//SEE do not forget to remove found elements from allDataPaths so it gets empty !
-					allDataPaths.erase(allDataPaths.begin());
-					allDataPaths.erase(path);
-				} else { //There is no match, CTPath will be changed next iteration
-					PETPath = "";
-				}
-			}
+		std::pair<fs::path,fs::path> curPair;
+		fs::path CTPath;
+		fs::path PETPath;
+		std::string curPath;
+		uint PETNameEnds;
+	for (auto &p : fs::directory_iterator(dataFolder)) {
+		curPath=fs::path(p);
+		PETNameEnds=curPath.find("_PET");
+		if (curPath.find("_PET")!=std::string::npos){ //This is a PET data folder
+			PETPath=curPath;
+			curPath.erase(curPath.begin()+PETNameEnds+1,curPath.end()); //Removes the _PET part in folder name
+curPath+="CT";
+CTPath=curPath;
+curPair=std::make_pair(CTPath,PETPath);
+unprocessedFolders.push_back(curPair);
 		}
 	}
 }
 
 /**
- * third processing step : creates relevant folders with base name Set_ and desired content
+ * second processing step : creates relevant folders with base name Set_ and desired content
  * @params : first char* is original data location, second char* is desired organized data location
  */
 void genSetFolders(std::pair<char*,char*> parsed_params){
 	fs::path pIn=parsed_params.first;
 	fs::path pOut=parsed_params.second;
-	pairRelatedFolders(findFolders(pIn));
+	pairRelatedFolders(pIn);
 	int foldersToWrite=unprocessedFolders.size();
 	std::vector<std::string> foldersNames=generateNames(foldersToWrite,std::string("_Set")); //Generate names for _Set folders too !
 		fs::path CTPath;
@@ -130,18 +84,21 @@ void genSetFolders(std::pair<char*,char*> parsed_params){
 
 
 fs::path findMask(fs::path parentFolder) {
-	for (auto& p : fs::recursive_directory_iterator(parentFolder)) {
+	for (auto p : fs::recursive_directory_iterator(parentFolder)) {
 		fs::path curPath = fs::path(p);
 		if (curPath.extension() == ".dcm") { //We have found a dicom file. Is it a mask or a scan file ? Not known yet
 			//SEE Modify here if masks are not found properly
-			if (curPath.parent_path().stem() == "secondary") {
+			std::cout<<"A .dcm file was found at location :" <<std::endl;
+			std::cout<<curPath.parent_path().parent_path().stem()<<std::endl;
+			if (curPath.parent_path().parent_path().stem() == "secondary") {
 				return curPath;
 			}
 		}
 	}
-	std::cerr << "A mask Was not found" << std::endl;
-	return "";
-}
+	std::cerr << "A mask Was not found for this data folder :" << std::endl;
+	std::cerr<<parentFolder<<std::endl;
+    std::cin.get();
+            exit(0);}
 
 
 fs::path findScans(fs::path parentFolder) {
@@ -149,14 +106,16 @@ fs::path findScans(fs::path parentFolder) {
 		fs::path curPath = fs::path(p);
 		if (curPath.extension() == ".dcm") { //We have found a dicom file. Is it a mask or a scan file ? Not known yet
 			//SEE Modify here if scans are not found properly
-			if (curPath.parent_path().stem() == "DICOM") {
+			if (curPath.parent_path().parent_path().stem() == "DICOM") {
 				return curPath;
 			}
 		}
 	}
 	std::cerr << "Some scans were not found" << std::endl;
-	return "";
-}
+    std::cin.get();
+            exit(0);}
+
+//TODO modify code to put images from different modalities in different folders
 
 /**
  * Writes organized symbolic links to data files to targetPath folder

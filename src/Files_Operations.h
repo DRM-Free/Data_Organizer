@@ -21,7 +21,6 @@ namespace fs = std::experimental::filesystem;
  */
 static std::vector<std::pair<fs::path, fs::path>> unprocessedFolders;
 
-std::vector<fs::path> findFolders(fs::path dataFolder);
 void genSetFolders(std::pair<char*,char*> parsed_params);
 void pairRelatedFolders(std::vector<fs::path> allDataPaths);
 fs::path findMask(fs::path parentFolder);
