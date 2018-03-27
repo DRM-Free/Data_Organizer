@@ -21,8 +21,8 @@ std::vector<std::string> generateNames(int range,
 	std::string curName="";
 
 	for (int i = 0; i < range; ++i) {
-	curName=std::to_string(i);
-	curName+=nameComplement;
+	curName=nameComplement;
+	curName+=std::to_string(i);
 	names.push_back(curName);
 	}
 return names;

@@ -25,8 +25,7 @@ void genSetFolders(std::pair<char*,char*> parsed_params);
 void pairRelatedFolders(std::vector<fs::path> allDataPaths);
 fs::path findMask(fs::path parentFolder);
 fs::path findScans(fs::path parentFolder);
-void writeOrganizedData_symLink(fs::path writePath, fs::path CTScans,
-		fs::path PETScans, fs::path CTMask, fs::path PETMask);
+void writeOrganizedData_symLink(const fs::path writePath, fs::path scans,fs::path mask, std::string nameExtension);
 std::vector<std::pair<fs::path,fs::path>> pairRelatedFiles(fs::path CTPath, fs::path PETPath);
 
 #endif
