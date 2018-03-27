@@ -22,6 +22,7 @@ std::vector<std::string> generateNames(int range,
 
 	for (int i = 0; i < range; ++i) {
 	curName=std::to_string(i);
+	curName+=nameComplement;
 	names.push_back(curName);
 	}
 return names;

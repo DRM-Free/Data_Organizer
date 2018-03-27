@@ -9,8 +9,8 @@
 #define FILES_OPERATIONS_H_
 
 #include <utility>      // std::pair, std::make_pair
-#include <experimental/filesystem> //SEE requires c++17 AND most recent g++ compiler setup
 #include <vector>
+#include <experimental/filesystem> //SEE requires c++17 AND most recent g++ compiler setup
 
 namespace fs = std::experimental::filesystem;
 

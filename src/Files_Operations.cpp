@@ -60,8 +60,8 @@ void genSetFolders(std::pair<char*,char*> parsed_params){
 	int foldersToWrite=unprocessedFolders.size();
 	std::vector<std::string> foldersNames=generateNames(foldersToWrite,std::string("_Set")); //Generate names for _Set folders too !
 		fs::path CTPath;
-		fs::path PETPath;
-		fs::path CTMask;
+		fs::path PETPath="";
+		fs::path CTMask="";
 		fs::path PETMask;
 		fs::path CTScans;
 		fs::path PETScans;
@@ -74,11 +74,12 @@ void genSetFolders(std::pair<char*,char*> parsed_params){
 		PETMask = findMask(PETPath);
 		CTScans = findScans(CTPath);
 		PETScans = findScans(PETPath);
+		if((CTPath!="")and( PETPath!="")and (CTMask!="")and (PETMask!="")){
 		writePath=fs::path(parsed_params.second);
 		//Time to write all those files somewhere !
 		writePath/=foldersNames[f-unprocessedFolders.begin()]; //Choose the proper name number
 		writeOrganizedData_symLink(writePath, CTScans, PETScans, CTMask,
-				PETMask);
+				PETMask);}
 }
 }
 
@@ -88,8 +89,8 @@ fs::path findMask(fs::path parentFolder) {
 		fs::path curPath = fs::path(p);
 		if (curPath.extension() == ".dcm") { //We have found a dicom file. Is it a mask or a scan file ? Not known yet
 			//SEE Modify here if masks are not found properly
-			std::cout<<"A .dcm file was found at location :" <<std::endl;
-			std::cout<<curPath.parent_path().parent_path().stem()<<std::endl;
+//			std::cout<<"A mask file was found at location :" <<std::endl;
+//			std::cout<<curPath<<std::endl;
 			if (curPath.parent_path().parent_path().stem() == "secondary") {
 				return curPath;
 			}
@@ -97,8 +98,8 @@ fs::path findMask(fs::path parentFolder) {
 	}
 	std::cerr << "A mask Was not found for this data folder :" << std::endl;
 	std::cerr<<parentFolder<<std::endl;
-    std::cin.get();
-            exit(0);}
+	std::cerr << "Excluding this patient folder from output" << std::endl;
+    return fs::path("");}
 
 
 fs::path findScans(fs::path parentFolder) {
@@ -107,13 +108,14 @@ fs::path findScans(fs::path parentFolder) {
 		if (curPath.extension() == ".dcm") { //We have found a dicom file. Is it a mask or a scan file ? Not known yet
 			//SEE Modify here if scans are not found properly
 			if (curPath.parent_path().parent_path().stem() == "DICOM") {
-				return curPath;
+				return curPath.parent_path();
 			}
 		}
 	}
-	std::cerr << "Some scans were not found" << std::endl;
-    std::cin.get();
-            exit(0);}
+	std::cerr << "Scans were not found for this data folder :" << std::endl;
+	std::cerr<<parentFolder<<std::endl;
+	std::cerr << "Excluding this patient folder from output" << std::endl;
+    return fs::path("");}
 
 //TODO modify code to put images from different modalities in different folders
 
@@ -146,7 +148,15 @@ if(CTNumber!=PETNumber){ //SEE just a quick check that there is a proper number 
 	std::vector<std::string> PETNames=generateNames(PETNumber,std::string("_Pet")); //Generate PET names
 	fs::path curPath;
 	std::vector<std::pair<fs::path,fs::path>> pairedFiles=pairRelatedFiles(CTScans,PETScans);
+		curPath=writePath;
+curPath/="RTSTRUCT_CT";
+		fs::create_symlink(CTMask, curPath);  //Creates symbolic link with target the path to PET image file
+		curPath=writePath;
+curPath/="RTSTRUCT_PET";
+	    fs::create_symlink(PETMask, curPath);  //Creates symbolic link with target the path to PET image file
 for (auto p = pairedFiles.begin(); p != pairedFiles.end(); ++p) {
+	//SEE Here symbolic links are written
+	//TODO Maybe replace absolute path links with relative path links so that result folders can be moved later on
 		curPath=writePath;
 		curPath/=CTNames[p-pairedFiles.begin()]; //Choose the proper name number
 	    fs::create_symlink(p->first, curPath); //Creates symbolic link with target the path to CT image file
@@ -155,20 +165,19 @@ for (auto p = pairedFiles.begin(); p != pairedFiles.end(); ++p) {
 	    fs::create_symlink(p->second, curPath);  //Creates symbolic link with target the path to PET image file
 }}
 
-std::vector<std::pair<fs::path,fs::path>> pairRelatedFiles(fs::path CTPath, const fs::path PETPath){
+std::vector<std::pair<fs::path,fs::path>> pairRelatedFiles(const fs::path CTPath, const fs::path PETPath){
 std::vector<std::pair<fs::path,fs::path>> pairedFiles; //First element of pair : CT image path. Second element : path to PET image file
 	fs::path curCTPath; //Path to CT image file to be added to pairedFiles
 	fs::path curPETPath; //Path to PET image file to be added to pairedFiles
 	std::pair<fs::path,fs::path> curPair; //Curent pair to be added (made from curCTPath and curPETPath
 for (auto ct : fs::directory_iterator(CTPath)) {
-	curPETPath=PETPath;
-	curCTPath=ct;
-	curPETPath=curCTPath.stem();
 	/**
 	 *
 	 *SEE Program takes for granted that files are paired properly (both CT and PET files exist with same name). If not the case, problems will occur
 	 *SEE A full research for paired files is considered too costly but can still be implemented here
 	*/
+	curCTPath=ct;
+	curPETPath=PETPath;
 	curPETPath/=curCTPath.filename(); //Appends proper file name to PETPath
 curPair=std::make_pair(curCTPath,curPETPath);
 pairedFiles.push_back(curPair);

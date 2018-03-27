@@ -12,18 +12,27 @@
 #include <iostream>
 #include <stdlib.h>     /* exit, EXIT_FAILURE */
 #include <limits>
+#include <experimental/filesystem> //SEE requires c++17 AND most recent g++ compiler setup
 
+namespace fs = std::experimental::filesystem;
 // When passing char arrays as parameters they must be pointers
 int main(int argc, char* argv[]) {
 //#define test
 #ifndef test
 std::pair<char*,char*> parsed_params = parse_params(argc,argv);
 std::cout<<"Data will be loaded from " << parsed_params.first << " And output will be in " << parsed_params.second << std::endl;
+std::cout<<"Output folder current content will be lost" << std::endl;
 std::cout<<"Confirm ?" << std::endl;
 std::string user_choice;
 std::getline(std::cin,user_choice);
 if(user_choice==(std::string)"\0" or user_choice==(std::string)"y"){ //User acceptance
 	std::cout << "Proceeding to file operations" << std::endl;
+	fs::path out=parsed_params.second;
+	if(fs::exists(out)){
+	fs::remove_all(fs::path(out));
+	fs::create_directory(fs::path(out));}
+	else{
+	fs::create_directory(fs::path(out));}
 	genSetFolders(parsed_params);
 	std::cout<<"Done"<<std::endl;
 }
