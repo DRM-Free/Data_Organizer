@@ -19,21 +19,21 @@ namespace fs = std::experimental::filesystem;
 int main(int argc, char* argv[]) {
 //#define test
 #ifndef test
-std::pair<char*,char*> parsed_params = parse_params(argc,argv);
-std::cout<<"Data will be loaded from " << parsed_params.first << " And output will be in " << parsed_params.second << std::endl;
+parsed_Params par = parse_params(argc,argv);
+std::cout<<"Data will be loaded from " << par.inPath << " And output will be in " << par.outPath << std::endl;
 std::cout<<"Output folder current content will be lost" << std::endl;
 std::cout<<"Confirm ?" << std::endl;
 std::string user_choice;
 std::getline(std::cin,user_choice);
 if(user_choice==(std::string)"\0" or user_choice==(std::string)"y"){ //User acceptance
 	std::cout << "Proceeding to file operations" << std::endl;
-	fs::path out=parsed_params.second;
+	fs::path out=par.outPath;
 	if(fs::exists(out)){
 	fs::remove_all(fs::path(out));
 	fs::create_directory(fs::path(out));}
 	else{
 	fs::create_directory(fs::path(out));}
-	genSetFolders(parsed_params);
+	genSetFolders(par);
 	std::cout<<"Done"<<std::endl;
 }
 

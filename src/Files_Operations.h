@@ -8,9 +8,11 @@
 #ifndef FILES_OPERATIONS_H_
 #define FILES_OPERATIONS_H_
 
+#include "Params_Parser.h"
+
 #include <utility>      // std::pair, std::make_pair
 #include <vector>
-#include <experimental/filesystem> //SEE requires c++17 AND most recent g++ compiler setup
+#include <experimental/filesystem>
 
 namespace fs = std::experimental::filesystem;
 
@@ -21,7 +23,7 @@ namespace fs = std::experimental::filesystem;
  */
 static std::vector<std::pair<fs::path, fs::path>> unprocessedFolders;
 
-void genSetFolders(std::pair<char*,char*> parsed_params);
+void genSetFolders(parsed_Params par);
 void pairRelatedFolders(std::vector<fs::path> allDataPaths);
 fs::path findMask(fs::path parentFolder);
 fs::path findScans(fs::path parentFolder);

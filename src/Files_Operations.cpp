@@ -53,9 +53,9 @@ unprocessedFolders.push_back(curPair);
  * second processing step : creates relevant folders with base name Set_ and desired content
  * @params : first char* is original data location, second char* is desired organized data location
  */
-void genSetFolders(std::pair<char*,char*> parsed_params){
-	fs::path pIn=parsed_params.first;
-	fs::path pOut=parsed_params.second;
+void genSetFolders(parsed_Params par){
+	fs::path pIn=par.inPath;
+	fs::path pOut=par.outPath;
 	pairRelatedFolders(pIn);
 	int foldersToWrite=unprocessedFolders.size();
 	std::vector<std::string> foldersNames=generateNames(foldersToWrite,std::string("Patient_")); //Generate names for _Set folders too !
@@ -75,7 +75,7 @@ void genSetFolders(std::pair<char*,char*> parsed_params){
 		CTScans = findScans(CTPath);
 		PETScans = findScans(PETPath);
 		if((CTPath!="")and( PETPath!="")and (CTMask!="")and (PETMask!="")){
-		writePath=fs::path(parsed_params.second);
+		writePath=fs::path(par.outPath);
 		//Time to write all those files somewhere !
 		writePath/=foldersNames[f-unprocessedFolders.begin()]; //Choose the proper name number
 		writeOrganizedData_symLink(writePath, CTScans, CTMask, "CT");
@@ -119,8 +119,6 @@ fs::path findScans(fs::path parentFolder) {
 	std::cerr<<parentFolder<<std::endl;
 	std::cerr << "Excluding this patient folder from output" << std::endl;
     return fs::path("");}
-
-//TODO modify code to put images from different modalities in different folders
 
 /**
  * Writes organized symbolic links to data files to targetPath folder
