@@ -33,7 +33,7 @@ if(user_choice==(std::string)"\0" or user_choice==(std::string)"y"){ //User acce
 	fs::create_directory(fs::path(out));}
 	else{
 	fs::create_directory(fs::path(out));}
-	genSetFolders(par);
+	genSetFolders(par,par.ref);
 	std::cout<<"Done"<<std::endl;
 }
 

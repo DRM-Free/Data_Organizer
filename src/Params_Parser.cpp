@@ -14,7 +14,7 @@ parsed_Params parse_params(int argc, char* argv[]) {
     if (argc < 5)
     				{ // Check the value of argc. If not enough parameters have been passed, inform user and exit.
         std::cout << "Not enough arguments." << std::endl <<"Usage is -in <data_location> -out <output_location>"<<std::endl; // Inform the user of how to use the program
-        std::cout << "optionnal argument : -ref sym or -ref cp defines reference behaviour (copies full files or creates symbolic links"<<std::endl; // Inform the user of how to use the program
+        std::cout << "optionnal argument : -ref sym or -ref cp defines reference behaviour (copies full files or creates symbolic links)"<<std::endl; // Inform the user of how to use the program
         std::cin.get(); //Just to keep the console open after execution so user can read error msg
         exit(0);
     				}
@@ -22,7 +22,7 @@ parsed_Params parse_params(int argc, char* argv[]) {
     				{ // Check the value of argc. If not enough parameters have been passed, inform user and exit.
             std::cout << argc << " arguments were given " << std::endl;
         std::cout << "Too many arguments." << std::endl <<"Usage is -in <data_location> -out <output_location>"<<std::endl; // Inform the user of how to use the program
-        std::cout << "optionnal argument : -ref sym or -ref cp defines reference behaviour (copies full files or creates symbolic links"<<std::endl; // Inform the user of how to use the program
+        std::cout << "optionnal argument : -ref sym or -ref cp defines reference behaviour (copies full files or creates symbolic links)"<<std::endl; // Inform the user of how to use the program
             std::cin.get();
             exit(0);
         			}
@@ -48,8 +48,8 @@ parsed_Params parse_params(int argc, char* argv[]) {
                                 {
                                 	par.ref=argv[i + 1];
                                 	if((par.ref!="cp")and(par.ref!="sym")){
-                                		        std::cout << "optionnal argument : -ref sym or -ref cp defines reference behaviour (copies full files or creates symbolic links"<<std::endl; // Inform the user of how to use the program
-                                		std::cout<<"Reference parameter -ref "<< argv[i + 1]<<"not supported. Symbolic links will be used"<<std::endl;
+                                		        std::cout << "optionnal argument : -ref sym or -ref cp defines reference behaviour (copies full files or creates symbolic links)"<<std::endl; // Inform the user of how to use the program
+                                		std::cout<<"Reference parameter -ref "<< argv[i + 1]<<" not supported. Symbolic links will be used"<<std::endl;
                                 		par.ref="sym";
                                 	}
                                 }
@@ -65,11 +65,15 @@ parsed_Params parse_params(int argc, char* argv[]) {
         }
         if((par.inPath=="")or(par.outPath=="")){
         	std::cout<<"Invalid arguments"<<std::endl<<"Usage is -in <data_location> -out <output_location>"<<std::endl; // Inform the user of how to use the program
-            std::cout << "optionnal argument : -ref sym or -ref cp defines reference behaviour (copies full files or creates symbolic links"<<std::endl; // Inform the user of how to use the program
+            std::cout << "optionnal argument : -ref sym or -ref cp defines reference behaviour (copies full files or creates symbolic links)"<<std::endl; // Inform the user of how to use the program
                 std::cin.get();
                 exit(0);
         }
-return par;
-    }
+        if(par.ref==""){
+                                        		        std::cout << "optionnal argument : -ref sym or -ref cp defines reference behaviour (copies full files or creates symbolic links"<<std::endl; // Inform the user of how to use the program
+                                        		std::cout<<"Reference parameter -ref not provided. Symbolic links will be used"<<std::endl;
+                                        		par.ref="sym";
+}return par;
+}
 }
 

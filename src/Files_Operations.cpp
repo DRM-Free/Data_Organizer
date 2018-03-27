@@ -53,7 +53,7 @@ unprocessedFolders.push_back(curPair);
  * second processing step : creates relevant folders with base name Set_ and desired content
  * @params : first char* is original data location, second char* is desired organized data location
  */
-void genSetFolders(parsed_Params par){
+void genSetFolders(parsed_Params par, std::string ref){
 	fs::path pIn=par.inPath;
 	fs::path pOut=par.outPath;
 	pairRelatedFolders(pIn);
@@ -78,8 +78,8 @@ void genSetFolders(parsed_Params par){
 		writePath=fs::path(par.outPath);
 		//Time to write all those files somewhere !
 		writePath/=foldersNames[f-unprocessedFolders.begin()]; //Choose the proper name number
-		writeOrganizedData_symLink(writePath, CTScans, CTMask, "CT");
-		writeOrganizedData_symLink(writePath, PETScans, PETMask, "PET");
+		writeData(writePath, CTScans, CTMask, "CT",ref);
+		writeData(writePath, PETScans, PETMask, "PET",ref);
 		}
 //		void writeOrganizedData_symLink(const fs::path writePath, fs::path scans,fs::path mask, std::string nameExtension) {
 
@@ -125,13 +125,14 @@ fs::path findScans(fs::path parentFolder) {
  *
  */
 //TODO only write one type of imaging modality per folder
-void writeOrganizedData_symLink(const fs::path writePath, fs::path scans,fs::path mask, std::string nameExtension) {
+void writeData(const fs::path writePath, fs::path scans,fs::path mask, std::string nameExtension, std::string ref) {
 	//SEE nameExtension must not have an '_', just let writeOrganizedData_symLink handle separators
 	int ScansNumber=0;
 	for (auto& p : fs::directory_iterator(scans)) {
 		ScansNumber++;
 	}
 fs::path write=writePath;
+std::string addName=(ref=="cp"? ".dcm":"");
 write/=nameExtension;
 	std::cout << "Writing to folder " << write << std::endl;
 	if(!fs::exists(writePath)){
@@ -140,21 +141,30 @@ write/=nameExtension;
 		fs::create_directory(write);
 
 	fs::path curPath;
-	std::vector<std::string> Names=generateNames(ScansNumber,std::string(nameExtension)); //Generate CT names
+	std::vector<std::string> Names=generateNames(ScansNumber,std::string(nameExtension)); //Generate scans names
+	//Generate names depending on ref. If symbolic link, extension .dcm not relevant
 		std::string maskName=nameExtension;
 		maskName+="_RTSTRUCT";
+		maskName+=addName;
 		curPath=write;
 curPath/=maskName;
-	    fs::create_symlink(mask, curPath);  //Creates symbolic link with target the path to mask image file
-		curPath=writePath;
+		if (ref=="cp"){
+			fs::copy_file(mask, curPath); //Full copy of mask image file
+		}
+		else{
+	    fs::create_symlink(mask, curPath);}  //Creates symbolic link with target the path to mask image file
+
+curPath=writePath;
 		int namePos=0;
 	    for (auto sc : fs::directory_iterator(scans)) {
 	//SEE Here symbolic links are written
 	//TODO Maybe replace absolute path links with relative path links so that result folders can be moved later on
 		curPath=write;
-		curPath/=Names[namePos]; //Choose the proper name number
+		curPath/=(Names[namePos]+addName); //Choose the proper name number
 	    namePos++;
-	    fs::create_symlink(sc, curPath); //Creates symbolic link with target the path to CT image file
+	    if (ref=="sym"){
+	    fs::create_symlink(sc, curPath);} //Creates symbolic link with target the path to CT image file
+	    else{fs::copy_file(sc, curPath);}
 }}
 
 std::vector<std::pair<fs::path,fs::path>> pairRelatedFiles(const fs::path CTPath, const fs::path PETPath){

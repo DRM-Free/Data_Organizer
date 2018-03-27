@@ -23,11 +23,11 @@ namespace fs = std::experimental::filesystem;
  */
 static std::vector<std::pair<fs::path, fs::path>> unprocessedFolders;
 
-void genSetFolders(parsed_Params par);
+void genSetFolders(parsed_Params par, std::string ref);
 void pairRelatedFolders(std::vector<fs::path> allDataPaths);
 fs::path findMask(fs::path parentFolder);
 fs::path findScans(fs::path parentFolder);
-void writeOrganizedData_symLink(const fs::path writePath, fs::path scans,fs::path mask, std::string nameExtension);
+void writeData(const fs::path writePath, fs::path scans,fs::path mask, std::string nameExtension, std::string ref);
 std::vector<std::pair<fs::path,fs::path>> pairRelatedFiles(fs::path CTPath, fs::path PETPath);
 
 #endif
