@@ -13,7 +13,8 @@
 #include <string>
 #include <iostream>
 
-
+//SEE preprocessor instruction for keeping original data folders names (without _CT or _PET at the end
+#define keepFoldersNames
 /**
  * First processing step : find and pair data folders with their relative of other imaging modality
  *
@@ -58,7 +59,9 @@ void genSetFolders(parsed_Params par, std::string ref){
 	fs::path pOut=par.outPath;
 	pairRelatedFolders(pIn);
 	int foldersToWrite=unprocessedFolders.size();
+#ifndef keepFoldersNames
 	std::vector<std::string> foldersNames=generateNames(foldersToWrite,std::string("Patient_")); //Generate names for _Set folders too !
+#endif
 		fs::path CTPath;
 		fs::path PETPath="";
 		fs::path CTMask="";
@@ -67,6 +70,7 @@ void genSetFolders(parsed_Params par, std::string ref){
 		fs::path PETScans;
 		fs::path writePath;
 		std::string curName;
+		int pos;
 	for (auto f = unprocessedFolders.begin(); f != unprocessedFolders.end();++f) {
 		CTPath = f->first;
 		PETPath = f->second;
@@ -77,7 +81,15 @@ void genSetFolders(parsed_Params par, std::string ref){
 		if((CTPath!="")and( PETPath!="")and (CTMask!="")and (PETMask!="")){
 		writePath=fs::path(par.outPath);
 		//Time to write all those files somewhere !
+#ifdef keepFoldersNames
+		curName=CTPath.filename();
+pos=curName.rfind("_");
+curName.erase(curName.begin()+pos,curName.end());
+writePath/=curName;
+#endif
+#ifndef keepFoldersNames
 		writePath/=foldersNames[f-unprocessedFolders.begin()]; //Choose the proper name number
+#endif
 		writeData(writePath, CTScans, CTMask, "CT",ref);
 		writeData(writePath, PETScans, PETMask, "PET",ref);
 		}
