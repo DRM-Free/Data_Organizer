@@ -14,7 +14,8 @@
 #include <iostream>
 
 //SEE preprocessor instruction for keeping original data folders names (without _CT or _PET at the end
-#define keepFoldersNames
+//#define keepFoldersNames
+
 /**
  * First processing step : find and pair data folders with their relative of other imaging modality
  *
@@ -60,7 +61,6 @@ void genSetFolders(parsed_Params par, std::string ref){
 	pairRelatedFolders(pIn);
 	int foldersToWrite=unprocessedFolders.size();
 #ifndef keepFoldersNames
-	std::vector<std::string> foldersNames=generateNames(foldersToWrite,std::string("Patient_")); //Generate names for _Set folders too !
 #endif
 		fs::path CTPath;
 		fs::path PETPath="";
@@ -70,7 +70,6 @@ void genSetFolders(parsed_Params par, std::string ref){
 		fs::path PETScans;
 		fs::path writePath;
 		std::string curName;
-		int pos;
 	for (auto f = unprocessedFolders.begin(); f != unprocessedFolders.end();++f) {
 		CTPath = f->first;
 		PETPath = f->second;
@@ -88,7 +87,9 @@ curName.erase(curName.begin()+pos,curName.end());
 writePath/=curName;
 #endif
 #ifndef keepFoldersNames
-		writePath/=foldersNames[f-unprocessedFolders.begin()]; //Choose the proper name number
+curName="Lung-Multidelineation-";
+curName+=findBetween(CTPath.filename(),"interobs","_"); //Finds actual number
+		writePath/=curName; //Choose the proper name number
 #endif
 		writeData(writePath, CTScans, CTMask, "CT",ref);
 		writeData(writePath, PETScans, PETMask, "PET",ref);
@@ -155,8 +156,7 @@ write/=nameExtension;
 	fs::path curPath;
 	std::vector<std::string> Names=generateNames(ScansNumber,std::string(nameExtension)); //Generate scans names
 	//Generate names depending on ref. If symbolic link, extension .dcm not relevant
-		std::string maskName=nameExtension;
-		maskName+="_RTSTRUCT";
+		std::string maskName="RTstruct";
 		maskName+=addName;
 		curPath=write;
 curPath/=maskName;
@@ -197,4 +197,11 @@ curPair=std::make_pair(curCTPath,curPETPath);
 pairedFiles.push_back(curPair);
 }
 return pairedFiles;
+}
+
+std::string findBetween(std::string to_search, std::string before,std::string after){
+	int pos1=to_search.find(before);
+	int pos2=to_search.find(after);
+	std::string res=to_search.substr(pos1+before.length(),pos2-pos1-before.length());
+return res;
 }

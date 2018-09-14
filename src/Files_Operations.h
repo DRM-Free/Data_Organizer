@@ -13,7 +13,7 @@
 #include <utility>      // std::pair, std::make_pair
 #include <vector>
 #include <experimental/filesystem>
-
+#include <string>
 namespace fs = std::experimental::filesystem;
 
 /**
@@ -29,5 +29,5 @@ fs::path findMask(fs::path parentFolder);
 fs::path findScans(fs::path parentFolder);
 void writeData(const fs::path writePath, fs::path scans,fs::path mask, std::string nameExtension, std::string ref);
 std::vector<std::pair<fs::path,fs::path>> pairRelatedFiles(fs::path CTPath, fs::path PETPath);
-
+std::string findBetween(std::string to_search, std::string before,std::string after);
 #endif
